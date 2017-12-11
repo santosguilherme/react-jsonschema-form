@@ -5,7 +5,7 @@ import "codemirror/mode/javascript/javascript";
 
 import { shouldRender } from "../src/utils";
 import { samples } from "./samples";
-import Form from "../src";
+import Form, { withLayout } from "../src";
 
 // Import a few CodeMirror themes; these are used to match alternative
 // bootstrap ones.
@@ -234,7 +234,7 @@ class Selector extends Component {
     return event => {
       event.preventDefault();
       this.setState({ current: label });
-      setImmediate(() => this.props.onSelected(samples[label]));
+      setImmediate(() => this.props.onSelected(samples[label], label));
     };
   };
 
@@ -325,6 +325,7 @@ class App extends Component {
       liveValidate: true,
       shareURL: null,
     };
+    this.FinForm = Form;
   }
 
   componentDidMount() {
@@ -344,9 +345,16 @@ class App extends Component {
     return shouldRender(this, nextProps, nextState);
   }
 
-  load = data => {
+  load = (data, label = "Simple") => {
     // Reset the ArrayFieldTemplate whenever you load new data
     const { ArrayFieldTemplate, ObjectFieldTemplate } = data;
+
+    if (label === "Layout form") {
+      this.FinForm = withLayout(Form);
+    } else {
+      this.FinForm = Form;
+    }
+
     // force resetting form component instance
     this.setState({ form: false }, _ =>
       this.setState({
@@ -354,6 +362,7 @@ class App extends Component {
         form: true,
         ArrayFieldTemplate,
         ObjectFieldTemplate,
+        pageLabel: label,
       })
     );
   };
@@ -402,6 +411,8 @@ class App extends Component {
       transformErrors,
     } = this.state;
 
+    const FinForm = this.FinForm;
+
     return (
       <div className="container-fluid">
         <div className="page-header">
@@ -411,12 +422,12 @@ class App extends Component {
               <Selector onSelected={this.load} />
             </div>
             <div className="col-sm-2">
-              <Form
+              <FinForm
                 schema={liveValidateSchema}
                 formData={liveValidate}
                 onChange={this.setLiveValidate}>
                 <div />
-              </Form>
+              </FinForm>
             </div>
             <div className="col-sm-2">
               <ThemeSelector theme={theme} select={this.onThemeSelected} />
@@ -451,7 +462,7 @@ class App extends Component {
         </div>
         <div className="col-sm-5">
           {this.state.form && (
-            <Form
+            <FinForm
               ArrayFieldTemplate={ArrayFieldTemplate}
               ObjectFieldTemplate={ObjectFieldTemplate}
               liveValidate={liveValidate}
@@ -485,7 +496,7 @@ class App extends Component {
                   />
                 </div>
               </div>
-            </Form>
+            </FinForm>
           )}
         </div>
       </div>
